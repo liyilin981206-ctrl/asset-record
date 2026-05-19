@@ -1,9 +1,22 @@
 {
-  "name": "资产记录",
-  "short_name": "资产记录",
+  "id": "./index.html",
+  "name": "资产追踪",
+  "short_name": "资产追踪",
+  "description": "记录每月投入、取出、收益和资产配置计划。",
   "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#f6f0ff",
   "theme_color": "#f6f0ff",
-  "lang": "zh-CN"
+  "lang": "zh-CN",
+  "categories": ["finance", "productivity"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }
