@@ -188,7 +188,7 @@ function setAuthVisible(visible) {
 
 function login(phone) {
   state.currentAccount = phone;
-  sessionStorage.setItem(sessionKey, phone);
+  localStorage.setItem(sessionKey, phone);
   loadAccountData(phone);
   setAuthVisible(false);
   els.accountButton.setAttribute("aria-label", `当前账号 ${maskPhone(phone)}`);
@@ -201,7 +201,7 @@ function login(phone) {
 function logout() {
   persistAccountData();
   state.currentAccount = "";
-  sessionStorage.removeItem(sessionKey);
+  localStorage.removeItem(sessionKey);
   els.authForm.reset();
   els.authTip.textContent = "原型阶段验证码会在本机模拟生成。";
   els.accountButton.setAttribute("aria-label", "账号");
@@ -1123,7 +1123,7 @@ els.logoutButton.addEventListener("click", () => {
   if (window.confirm("确认退出当前账号？")) logout();
 });
 
-const savedAccount = sessionStorage.getItem(sessionKey);
+const savedAccount = localStorage.getItem(sessionKey);
 if (savedAccount) login(savedAccount);
 else {
   setAuthVisible(true);
