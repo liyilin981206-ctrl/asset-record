@@ -598,6 +598,11 @@ function renderSnapshotRecord(snapshot) {
 function renderTargets() {
   const sourceTargets = state.planEditMode === "targets" && state.draftTargets ? state.draftTargets : targets;
   const classOptions = ["防御", "稳健", "进攻"];
+  const classMeta = {
+    "防御": { icon: "盾", tone: "defense" },
+    "稳健": { icon: "衡", tone: "steady" },
+    "进攻": { icon: "升", tone: "growth" },
+  };
   const byClass = sourceTargets.reduce((store, item) => {
     store[item.cls] = (store[item.cls] || 0) + item.target;
     return store;
@@ -605,22 +610,31 @@ function renderTargets() {
   if (state.planEditMode !== "targets") {
     els.targetPlanActions.innerHTML = '<button class="icon-edit-button" type="button" data-plan-edit="targets">编辑</button>';
     els.targetList.innerHTML = classOptions
-      .map((cls) => `
-        <article class="target-class-summary">
-          <div class="plan-summary-row class-total">
-            <span>${cls}</span>
-            <b>${Math.round((byClass[cls] || 0) * 100)}%</b>
+      .map((cls) => {
+        const meta = classMeta[cls] || classMeta["稳健"];
+        return `
+        <article class="target-class-summary is-${meta.tone}">
+          <div class="target-class-head">
+            <div class="class-label">
+              <span class="class-icon">${meta.icon}</span>
+              <div>
+                <strong>${cls}</strong>
+                <em>${sourceTargets.filter((item) => item.cls === cls).length} 个小类</em>
+              </div>
+            </div>
+            <b>${Math.round((byClass[cls] || 0) * 100)}<small>%</small></b>
           </div>
           <div class="target-type-list">
-            ${sourceTargets.filter((item) => item.cls === cls).map((item) => `
+            ${sourceTargets.filter((item) => item.cls === cls).map((item, index) => `
               <div class="target-type-row">
-                <span>${item.type}</span>
+                <span><i style="--dot-index:${index}"></i>${item.type}</span>
                 <b>${Math.round(item.target * 100)}%</b>
               </div>
             `).join("") || '<div class="target-type-row"><span>暂无小类</span><b>0%</b></div>'}
           </div>
         </article>
-      `)
+      `;
+      })
       .join("");
     return;
   }
@@ -629,12 +643,16 @@ function renderTargets() {
     .map((cls) => {
       const rows = sourceTargets.map((item, index) => ({ ...item, index })).filter((item) => item.cls === cls);
       const total = rows.reduce((sum, item) => sum + item.target, 0);
+      const meta = classMeta[cls] || classMeta["稳健"];
       return `
-        <article class="target-edit-group">
+        <article class="target-edit-group is-${meta.tone}">
           <div class="target-edit-head">
-            <div>
-              <strong>${cls}</strong>
-              <span>合计 ${Math.round(total * 100)}%</span>
+            <div class="class-label">
+              <span class="class-icon">${meta.icon}</span>
+              <div>
+                <strong>${cls}</strong>
+                <span>合计 ${Math.round(total * 100)}%</span>
+              </div>
             </div>
             <button type="button" data-add-target="${cls}">新增小类</button>
           </div>
@@ -746,6 +764,7 @@ function saveTargetPlans() {
 function renderView() {
   els.views.forEach((view) => view.classList.toggle("active", view.dataset.view === state.view));
   document.querySelectorAll("[data-nav]").forEach((button) => button.classList.toggle("active", button.dataset.nav === state.view));
+  document.body.dataset.view = state.view;
   const titles = {
     overview: "投入与收益总览",
     record: "记录资产流水",
