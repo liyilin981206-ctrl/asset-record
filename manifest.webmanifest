@@ -1,0 +1,9 @@
+{
+  "name": "资产记录",
+  "short_name": "资产记录",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f6f0ff",
+  "theme_color": "#f6f0ff",
+  "lang": "zh-CN"
+}
