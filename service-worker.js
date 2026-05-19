@@ -1,4 +1,4 @@
-const CACHE_NAME = "asset-record-v2";
+const CACHE_NAME = "asset-record-v4";
 const APP_ASSETS = [
   "./",
   "./index.html",
