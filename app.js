@@ -616,10 +616,8 @@ function renderTargets() {
         <article class="target-class-summary is-${meta.tone}">
           <div class="target-class-head">
             <div class="class-label">
-              <span class="class-icon">${meta.icon}</span>
               <div>
                 <strong>${cls}</strong>
-                <em>${sourceTargets.filter((item) => item.cls === cls).length} 个小类</em>
               </div>
             </div>
             <b>${Math.round((byClass[cls] || 0) * 100)}<small>%</small></b>
@@ -648,7 +646,6 @@ function renderTargets() {
         <article class="target-edit-group is-${meta.tone}">
           <div class="target-edit-head">
             <div class="class-label">
-              <span class="class-icon">${meta.icon}</span>
               <div>
                 <strong>${cls}</strong>
                 <span>合计 ${Math.round(total * 100)}%</span>
