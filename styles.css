@@ -1302,23 +1302,6 @@ select:focus {
   box-shadow: 0 8px 24px rgba(112, 88, 240, 0.38);
 }
 
-.mine-avatar::after {
-  content: "✓";
-  position: absolute;
-  right: -4px;
-  bottom: -4px;
-  display: grid;
-  place-items: center;
-  width: 18px;
-  height: 18px;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  background: #38c088;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 950;
-}
-
 .mine-info {
   flex: 1;
   min-width: 0;

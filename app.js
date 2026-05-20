@@ -736,17 +736,18 @@ function renderMonthlyPlans() {
   els.defaultPlanInput.value = sourcePlans["默认"] || 0;
   const years = monthlyPlanYears(sourcePlans);
   if (!years.includes(state.monthlyPlanYear)) state.monthlyPlanYear = years[0] || currentYear;
+  const defaultAmount = sourcePlans["默认"] || 0;
   const overrides = Object.entries(sourcePlans)
-    .filter(([month]) => month !== "默认" && month.startsWith(state.monthlyPlanYear))
+    .filter(([month, amount]) => month !== "默认" && month.startsWith(state.monthlyPlanYear) && amount !== defaultAmount)
     .sort(([a], [b]) => a.localeCompare(b));
   els.monthlyPlanYearOptions.innerHTML = years.map((year) => `
     <button type="button" class="${year === state.monthlyPlanYear ? "active" : ""}" data-plan-year="${year}">${year}年</button>
   `).join("");
   els.monthlyPlanSummary.innerHTML = `
-    <div class="plan-summary-row">
-      <span>新增月份默认金额</span>
-      <b>${formatMoney(sourcePlans["默认"] || 0)}</b>
-    </div>
+      <div class="plan-summary-row">
+        <span>新增月份默认金额</span>
+        <b>${formatMoney(defaultAmount)}</b>
+      </div>
     ${overrides.map(([month, amount]) => `
       <div class="plan-summary-row plan-summary-row-muted">
         <span>${monthLabel(month)}</span>
@@ -798,17 +799,10 @@ function cancelPlanEdit(mode) {
 function saveMonthlyPlans() {
   if (state.planEditMode !== "monthly") return;
   const next = { ...state.monthlyPlans };
-  const previousDefault = state.monthlyPlans["默认"] || 0;
-  monthOptions()
-    .filter((month) => month < currentMonth && next[month] === undefined)
-    .forEach((month) => {
-      next[month] = previousDefault;
-    });
   next["默认"] = moneyNumber("#defaultPlanInput");
   document.querySelectorAll("[data-plan-month]").forEach((input) => {
     const value = input.value.trim();
     if (value) next[input.dataset.planMonth] = Number(value.replace(/[^\d.]/g, "")) || 0;
-    else if (input.dataset.planMonth < currentMonth) next[input.dataset.planMonth] = previousDefault;
     else delete next[input.dataset.planMonth];
   });
   state.monthlyPlans = next;
@@ -1098,10 +1092,11 @@ document.addEventListener("click", (event) => {
   if (option) {
     const select = option.closest(".app-select");
     const input = select.querySelector("input");
+    const options = Array.from(select.querySelectorAll("[data-select-option]")).map((button) => button.dataset.selectOption);
     input.value = option.dataset.selectOption;
-    setAppSelectOptions(input, Array.from(select.querySelectorAll("[data-select-option]")).map((button) => button.dataset.selectOption), input.value);
-    input.dispatchEvent(new Event("change", { bubbles: true }));
     closeAppSelects();
+    setAppSelectOptions(input, options, input.value);
+    input.dispatchEvent(new Event("change", { bubbles: true }));
     return;
   }
   if (!event.target.closest(".app-select")) closeAppSelects();
