@@ -1324,8 +1324,8 @@ select:focus {
 .history-month-strip {
   position: relative;
   z-index: 2;
-  margin: 0 0 12px;
-  padding: 2px 0 4px;
+  margin: 0 0 8px;
+  padding: 0 0 2px;
   scroll-padding-inline: 26px;
 }
 
@@ -2043,7 +2043,7 @@ select:focus {
   flex-direction: column;
   max-height: 88vh;
   overflow: hidden;
-  padding: 16px;
+  padding: 12px 16px 16px;
   border-radius: 28px 28px 0 0;
   background: #ffffff;
   box-shadow: 0 -18px 44px rgba(80, 45, 132, 0.18);
@@ -2080,6 +2080,7 @@ select:focus {
 }
 
 .modal-scroll-list {
+  flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
   padding-right: 2px;
