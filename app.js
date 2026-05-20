@@ -16,6 +16,9 @@ const currentYear = String(appToday.getFullYear());
 const recordPageSize = 7;
 const sessionKey = "assetTracker.currentAccount";
 const dataKeyPrefix = "assetTracker.account.";
+const viewOptions = ["overview", "record", "plan", "mine"];
+const initialView = new URLSearchParams(window.location.search).get("view");
+const accountStartDate = new Date("2024-03-01T00:00:00");
 
 const initialTargets = [
   { cls: "防御", type: "货币基金", target: 0.15 },
@@ -37,7 +40,7 @@ const targets = initialTargets.map((item) => ({ ...item }));
 const state = {
   currentAccount: "",
   loginCode: "",
-  view: "overview",
+  view: viewOptions.includes(initialView) ? initialView : "overview",
   selectedMonth: currentMonth,
   selectedYear: currentYear,
   selectedMonthFilter: "month",
@@ -46,6 +49,7 @@ const state = {
   recordView: "flow",
   recordMonth: "all",
   recordPage: 1,
+  amountVisible: true,
   planEditMode: "",
   draftMonthlyPlans: null,
   draftTargets: null,
@@ -73,10 +77,12 @@ const els = {
   sendCodeButton: document.querySelector("#sendCodeButton"),
   authTip: document.querySelector("#authTip"),
   accountButton: document.querySelector("#accountButton"),
+  heroPrivacyButton: document.querySelector("#heroPrivacyButton"),
   accountPhoneLabel: document.querySelector("#accountPhoneLabel"),
+  accountSinceLabel: document.querySelector("#accountSinceLabel"),
   mineFlowCount: document.querySelector("#mineFlowCount"),
   mineSnapshotCount: document.querySelector("#mineSnapshotCount"),
-  mineTargetCount: document.querySelector("#mineTargetCount"),
+  mineUseDays: document.querySelector("#mineUseDays"),
   logoutButton: document.querySelector("#logoutButton"),
   pageTitle: document.querySelector("#pageTitle"),
   nav: document.querySelector(".bottom-nav"),
@@ -178,6 +184,22 @@ function loadAccountData(phone) {
 
 function maskPhone(phone) {
   return `${phone.slice(0, 3)}****${phone.slice(7)}`;
+}
+
+function heroMoney(value) {
+  return state.amountVisible ? formatMoney(value) : "¥••••";
+}
+
+function assetIcon(cls = "", type = "") {
+  if (type.includes("黄金")) return "🪙";
+  if (cls === "防御") return "💰";
+  if (cls === "稳健") return "📈";
+  if (cls === "进攻") return "🚀";
+  return "📌";
+}
+
+function useDays() {
+  return Math.max(1, Math.ceil((appToday - accountStartDate) / 86400000));
 }
 
 function setAuthVisible(visible) {
@@ -315,10 +337,10 @@ function renderOverview() {
   els.inLabel.textContent = isYear ? "年度投入" : "本月投入";
   els.outLabel.textContent = isYear ? "年度取出" : "本月取出";
   els.profitLabel.textContent = isYear ? "年度盈亏" : "本月盈亏";
-  els.totalAsset.textContent = formatMoney(summary.endingAsset);
-  els.periodIn.textContent = formatMoney(summary.inAmount);
-  els.periodOut.textContent = formatMoney(summary.outAmount);
-  els.periodProfit.textContent = formatMoney(summary.profit);
+  els.totalAsset.textContent = heroMoney(summary.endingAsset);
+  els.periodIn.textContent = heroMoney(summary.inAmount);
+  els.periodOut.textContent = heroMoney(summary.outAmount);
+  els.periodProfit.textContent = heroMoney(summary.profit);
   els.periodProfit.className = summary.profit >= 0 ? "positive" : "negative";
   els.planStatus.textContent = `目标 ${formatMoney(summary.planned)}`;
   els.plannedIn.textContent = formatMoney(summary.planned);
@@ -480,12 +502,13 @@ function renderDetails(rows) {
       .sort((a, b) => b.endingAsset - a.endingAsset)
       .map((row) => `
         <article class="activity-item">
-          <div>
-            <div class="activity-name">${row.cls} · ${row.type}</div>
-            <div class="activity-meta">投入 ${formatMoney(row.inAmount)} / 取出 ${formatMoney(row.outAmount)}</div>
+          <div class="act-icon" aria-hidden="true">${assetIcon(row.cls, row.type)}</div>
+          <div class="activity-main act-body">
+            <div class="activity-name act-name">${row.cls} · ${row.type}</div>
+            <div class="activity-meta act-meta">投入 ${formatMoney(row.inAmount)} / 取出 ${formatMoney(row.outAmount)}</div>
           </div>
-          <div class="stack-value">
-            <b>${formatMoney(row.endingAsset)}</b>
+          <div class="stack-value act-right">
+            <b class="act-amount">${formatMoney(row.endingAsset)}</b>
             <span class="${row.profit >= 0 ? "positive" : "negative"}">${formatMoney(row.profit)}</span>
           </div>
         </article>
@@ -528,7 +551,7 @@ function renderRecords() {
   els.recordCount.textContent = `${records.length} 条`;
   els.recordList.innerHTML = pageRecords
     .map((record) => record.kind === "flow" ? renderFlowRecord(record) : renderSnapshotRecord(record))
-    .join("") || `<div class="empty-state">还没有${state.recordView === "flow" ? "流水明细" : "资产快照"}</div>`;
+    .join("");
   renderRecordPagination(records.length, totalPages);
 }
 
@@ -561,15 +584,16 @@ function renderFlowRecord(flow) {
   const isNegative = negativeOps.includes(flow.action);
   return `
     <article class="activity-item">
-      <div class="activity-main">
-        <div class="activity-name">${flow.platform} · ${flow.type}</div>
-        <div class="activity-meta">${flow.date} / ${flow.action} / ${flow.note || "无备注"}</div>
+      <div class="act-icon" aria-hidden="true">${assetIcon(flow.cls, flow.type)}</div>
+      <div class="activity-main act-body">
+        <div class="activity-name act-name">${flow.platform} · ${flow.type}</div>
+        <div class="activity-meta act-meta">${flow.date} / ${flow.action} / ${flow.note || "无备注"}</div>
       </div>
-      <div class="stack-value">
-        <b class="${isNegative ? "negative" : "positive"}">${isNegative ? "-" : "+"}${formatMoney(flow.amount)}</b>
-        <div class="record-controls">
-          <button class="record-action-button" type="button" data-edit-flow="${flow.index}">编辑</button>
-          <button class="record-action-button" type="button" data-delete-flow="${flow.index}">删除</button>
+      <div class="stack-value act-right">
+        <b class="act-amount ${isNegative ? "out negative" : "in positive"}">${isNegative ? "-" : "+"}${formatMoney(flow.amount)}</b>
+        <div class="record-controls act-controls">
+          <button class="record-action-button btn-sm btn-edit" type="button" data-edit-flow="${flow.index}">编辑</button>
+          <button class="record-action-button btn-sm btn-del" type="button" data-delete-flow="${flow.index}">删除</button>
         </div>
       </div>
     </article>
@@ -580,15 +604,16 @@ function renderSnapshotRecord(snapshot) {
   const profit = snapshot.end - snapshot.start;
   return `
     <article class="activity-item">
-      <div class="activity-main">
-        <div class="activity-name">${snapshot.cls} · ${snapshot.type}</div>
-        <div class="activity-meta">${snapshot.month} 快照 / 期初 ${formatMoney(snapshot.start)} / 期末 ${formatMoney(snapshot.end)}</div>
+      <div class="act-icon" aria-hidden="true">${assetIcon(snapshot.cls, snapshot.type)}</div>
+      <div class="activity-main act-body">
+        <div class="activity-name act-name">${snapshot.cls} · ${snapshot.type}</div>
+        <div class="activity-meta act-meta">${snapshot.month} 快照 / 期初 ${formatMoney(snapshot.start)} / 期末 ${formatMoney(snapshot.end)}</div>
       </div>
-      <div class="stack-value">
-        <b>${formatMoney(snapshot.end)}</b>
-        <div class="record-controls">
-          <button class="record-action-button" type="button" data-edit-snapshot="${snapshot.index}">编辑</button>
-          <button class="record-action-button" type="button" data-delete-snapshot="${snapshot.index}">删除</button>
+      <div class="stack-value act-right">
+        <b class="act-amount">${formatMoney(snapshot.end)}</b>
+        <div class="record-controls act-controls">
+          <button class="record-action-button btn-sm btn-edit" type="button" data-edit-snapshot="${snapshot.index}">编辑</button>
+          <button class="record-action-button btn-sm btn-del" type="button" data-delete-snapshot="${snapshot.index}">删除</button>
         </div>
       </div>
     </article>
@@ -773,9 +798,10 @@ function renderView() {
 
 function renderMine() {
   els.accountPhoneLabel.textContent = state.currentAccount ? maskPhone(state.currentAccount) : "未登录";
-  els.mineFlowCount.textContent = `${state.flows.length} 条`;
-  els.mineSnapshotCount.textContent = `${state.snapshots.length} 条`;
-  els.mineTargetCount.textContent = `${targets.length} 个`;
+  els.accountSinceLabel.textContent = `加入于 2024年3月 · 使用 ${useDays()} 天`;
+  els.mineFlowCount.textContent = state.flows.length;
+  els.mineSnapshotCount.textContent = state.snapshots.length;
+  els.mineUseDays.textContent = useDays();
 }
 
 function openFlowModal(index = "") {
@@ -1133,6 +1159,14 @@ els.authForm.addEventListener("submit", (event) => {
 els.accountButton.addEventListener("click", () => {
   state.view = "mine";
   renderAll();
+});
+
+els.heroPrivacyButton.addEventListener("click", () => {
+  state.amountVisible = !state.amountVisible;
+  els.heroPrivacyButton.classList.toggle("is-hidden", !state.amountVisible);
+  els.heroPrivacyButton.setAttribute("aria-label", state.amountVisible ? "隐藏金额" : "显示金额");
+  els.heroPrivacyButton.setAttribute("aria-pressed", String(!state.amountVisible));
+  renderOverview();
 });
 
 els.logoutButton.addEventListener("click", () => {
