@@ -304,122 +304,6 @@ h2 {
   display: block;
 }
 
-.plan-visual-hero {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 112px;
-  gap: 12px;
-  min-height: 128px;
-  margin: 12px 0 14px;
-  padding: 18px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  border-radius: 30px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.68) 58%),
-    radial-gradient(circle at 82% 18%, rgba(107, 95, 230, 0.28), transparent 7rem),
-    linear-gradient(150deg, #f8f7ff, #e9e6fb);
-  box-shadow: 0 20px 46px rgba(75, 63, 153, 0.14);
-}
-
-.plan-visual-hero span {
-  display: inline-flex;
-  margin-bottom: 8px;
-  padding: 5px 9px;
-  border-radius: 999px;
-  background: rgba(107, 95, 230, 0.1);
-  color: var(--green-deep);
-  font-size: 11px;
-  font-weight: 950;
-}
-
-.plan-visual-hero h2 {
-  max-width: 180px;
-  color: var(--ink);
-  font-size: 22px;
-  line-height: 1.18;
-}
-
-.plan-visual-hero p {
-  max-width: 190px;
-  margin-top: 8px;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1.45;
-}
-
-.plan-hero-art {
-  position: relative;
-  min-height: 92px;
-}
-
-.art-card {
-  position: absolute;
-  right: 0;
-  top: 12px;
-  width: 92px;
-  height: 70px;
-  border-radius: 24px;
-  background:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.78) 0 58%, transparent 58%),
-    linear-gradient(135deg, #6b5fe6, #9d8cff);
-  box-shadow: 0 16px 28px rgba(107, 95, 230, 0.24);
-  transform: rotate(-7deg);
-}
-
-.art-card::before,
-.art-card::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  width: 44px;
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.7);
-}
-
-.art-card::before {
-  top: 18px;
-}
-
-.art-card::after {
-  top: 34px;
-  width: 30px;
-}
-
-.art-dot {
-  position: absolute;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 8px 18px rgba(107, 95, 230, 0.16);
-}
-
-.art-dot.one {
-  right: 76px;
-  top: 6px;
-  width: 18px;
-  height: 18px;
-}
-
-.art-dot.two {
-  right: 10px;
-  bottom: 8px;
-  width: 13px;
-  height: 13px;
-}
-
-.art-line {
-  position: absolute;
-  right: 18px;
-  top: 22px;
-  width: 52px;
-  height: 52px;
-  border: 8px solid rgba(255, 255, 255, 0.45);
-  border-left-color: transparent;
-  border-radius: 50%;
-}
-
 .hero-panel {
   position: relative;
   overflow: hidden;
@@ -674,8 +558,8 @@ h2 {
 }
 
 .record-hero {
-  margin: 0 0 8px;
-  padding: 0 0 2px;
+  margin: 0 0 10px;
+  padding: 18px 0 4px;
   border-radius: 0;
   background: transparent;
 }
@@ -1128,6 +1012,7 @@ select:focus {
 }
 
 .view[data-view="plan"] .plan-card {
+  margin-top: 18px;
   padding: 16px;
   border: 1px solid rgba(255, 255, 255, 0.86);
   border-radius: 28px;
@@ -1137,6 +1022,10 @@ select:focus {
 
 .view[data-view="plan"] .section-title h2 {
   font-size: 18px;
+}
+
+.view[data-view="mine"] .account-panel {
+  margin-top: 18px;
 }
 
 .plan-summary-list {
