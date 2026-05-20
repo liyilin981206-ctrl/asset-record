@@ -1324,8 +1324,8 @@ select:focus {
 .history-month-strip {
   position: relative;
   z-index: 2;
-  margin: 0 0 48px;
-  padding: 6px 0 18px;
+  margin: 0 0 26px;
+  padding: 6px 0 10px;
   scroll-padding-inline: 26px;
 }
 
