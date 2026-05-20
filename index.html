@@ -317,7 +317,7 @@
       </section>
 
       <section class="modal-layer hidden" id="historyTargetModal" aria-label="修正历史目标弹窗">
-        <div class="modal-panel">
+        <div class="modal-panel history-target-modal-panel">
           <div class="modal-head">
             <div>
               <h2>修正历史目标</h2>
@@ -325,8 +325,10 @@
             </div>
             <button class="close-button" id="closeHistoryTarget" type="button" aria-label="关闭">×</button>
           </div>
-          <div id="historyMonthOptions" class="chip-strip history-month-strip" aria-label="历史月份选择"></div>
-          <div id="historyTargetList" class="target-list modal-scroll-list"></div>
+          <div class="history-target-modal-body">
+            <div id="historyMonthOptions" class="chip-strip history-month-strip" aria-label="历史月份选择"></div>
+            <div id="historyTargetList" class="target-list"></div>
+          </div>
           <div class="modal-actions">
             <button class="secondary-button" id="cancelHistoryTarget" type="button">取消</button>
             <button class="primary-button" id="confirmHistoryTarget" type="button">确认修正</button>

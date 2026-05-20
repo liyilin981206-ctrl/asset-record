@@ -1322,11 +1322,13 @@ select:focus {
 }
 
 .history-month-strip {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 2;
   margin: 0 0 8px;
   padding: 0 0 2px;
   scroll-padding-inline: 26px;
+  background: #ffffff;
 }
 
 .history-month-strip button {
@@ -2080,10 +2082,21 @@ select:focus {
 }
 
 .modal-scroll-list {
-  flex: 1 1 auto;
   overflow-y: auto;
   min-height: 0;
   padding-right: 2px;
+}
+
+.history-target-modal-panel {
+  padding: 12px 16px 16px;
+}
+
+.history-target-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0 -16px;
+  padding: 0 16px;
 }
 
 .close-button {

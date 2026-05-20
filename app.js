@@ -779,7 +779,8 @@ function renderHistoryTargetModal() {
   els.historyMonthOptions.innerHTML = months.map((month) => `
     <button type="button" class="${month === state.historyTargetMonth ? "active" : ""}" data-history-month="${month}">${month.slice(0, 4)}-${month.slice(5)}</button>
   `).join("");
-  els.historyTargetList.innerHTML = targetClassCards(targets, { editable: true });
+  const historyTargets = targetMonthTargets(state.historyTargetMonth);
+  els.historyTargetList.innerHTML = targetClassCards(historyTargets, { editable: true });
 }
 
 function renderMonthlyPlans() {
