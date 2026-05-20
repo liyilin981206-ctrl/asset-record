@@ -49,6 +49,7 @@ const state = {
   recordView: "flow",
   recordMonth: "all",
   recordPage: 1,
+  monthlyPlanYear: currentYear,
   amountVisible: true,
   planEditMode: "",
   draftMonthlyPlans: null,
@@ -79,7 +80,6 @@ const els = {
   accountButton: document.querySelector("#accountButton"),
   heroPrivacyButton: document.querySelector("#heroPrivacyButton"),
   accountPhoneLabel: document.querySelector("#accountPhoneLabel"),
-  accountSinceLabel: document.querySelector("#accountSinceLabel"),
   mineFlowCount: document.querySelector("#mineFlowCount"),
   mineSnapshotCount: document.querySelector("#mineSnapshotCount"),
   mineUseDays: document.querySelector("#mineUseDays"),
@@ -113,13 +113,16 @@ const els = {
   flowModalTitle: document.querySelector("#flowModalTitle"),
   snapshotModalTitle: document.querySelector("#snapshotModalTitle"),
   validationAlert: document.querySelector("#validationAlert"),
+  validationTitle: document.querySelector("#validationTitle"),
   validationMessage: document.querySelector("#validationMessage"),
   validationClose: document.querySelector("#validationClose"),
+  validationCancel: document.querySelector("#validationCancel"),
   openFlowButton: document.querySelector("#openFlowButton"),
   openSnapshotButton: document.querySelector("#openSnapshotButton"),
   flowForm: document.querySelector("#flowForm"),
   snapshotForm: document.querySelector("#snapshotForm"),
   flowPlatform: document.querySelector("#flowPlatform"),
+  flowAction: document.querySelector("#flowAction"),
   flowClass: document.querySelector("#flowClass"),
   flowAsset: document.querySelector("#flowAsset"),
   snapshotClass: document.querySelector("#snapshotClass"),
@@ -133,10 +136,13 @@ const els = {
   monthlyPlanActions: document.querySelector("#monthlyPlanActions"),
   monthlyPlanSummary: document.querySelector("#monthlyPlanSummary"),
   monthlyPlanEditor: document.querySelector("#monthlyPlanEditor"),
+  monthlyPlanYearOptions: document.querySelector("#monthlyPlanYearOptions"),
   monthlyPlanList: document.querySelector("#monthlyPlanList"),
   targetPlanActions: document.querySelector("#targetPlanActions"),
   targetList: document.querySelector("#targetList"),
 };
+
+let pendingAlertConfirm = null;
 
 function moneyNumber(selector) {
   return Number(document.querySelector(selector).value.replace(/[^\d.]/g, "")) || 0;
@@ -521,15 +527,43 @@ function renderDetails(rows) {
 
 function renderRecordOptions() {
   const classes = [...new Set(targets.map((item) => item.cls))];
-  els.flowPlatform.innerHTML = platforms.map((name) => `<option>${name}</option>`).join("");
-  [els.flowClass, els.snapshotClass].forEach((select) => (select.innerHTML = classes.map((name) => `<option>${name}</option>`).join("")));
+  setAppSelectOptions(els.flowPlatform, platforms);
+  setAppSelectOptions(els.flowAction, ["投入", "取出"]);
+  [els.flowClass, els.snapshotClass].forEach((input) => setAppSelectOptions(input, classes));
   renderAssetOptions(els.flowAsset, els.flowClass.value || classes[0]);
   renderAssetOptions(els.snapshotAsset, els.snapshotClass.value || classes[0]);
 }
 
-function renderAssetOptions(select, cls, selectedType = "") {
+function setAppSelectOptions(input, options, selectedValue = "") {
+  const wrapper = input.closest(".app-select");
+  const trigger = wrapper.querySelector(".app-select-trigger");
+  const valueLabel = trigger.querySelector("span");
+  const menu = wrapper.querySelector(".app-select-menu");
+  const nextValue = options.includes(selectedValue)
+    ? selectedValue
+    : options.includes(input.value)
+      ? input.value
+      : options[0] || "";
+  input.value = nextValue;
+  valueLabel.textContent = nextValue || "请选择";
+  menu.innerHTML = options.map((name) => `
+    <button type="button" class="${name === nextValue ? "active" : ""}" data-select-option="${name}" role="option" aria-selected="${name === nextValue}">
+      ${name}
+    </button>
+  `).join("");
+}
+
+function closeAppSelects(except = null) {
+  document.querySelectorAll(".app-select.open").forEach((select) => {
+    if (select === except) return;
+    select.classList.remove("open");
+    select.querySelector(".app-select-trigger").setAttribute("aria-expanded", "false");
+  });
+}
+
+function renderAssetOptions(input, cls, selectedType = "") {
   const assets = targets.filter((item) => item.cls === cls).map((item) => item.type);
-  select.innerHTML = assets.map((name) => `<option ${name === selectedType ? "selected" : ""}>${name}</option>`).join("");
+  setAppSelectOptions(input, assets, selectedType);
 }
 
 function renderRecordType() {
@@ -700,27 +734,32 @@ function renderTargets() {
 function renderMonthlyPlans() {
   const sourcePlans = state.planEditMode === "monthly" && state.draftMonthlyPlans ? state.draftMonthlyPlans : state.monthlyPlans;
   els.defaultPlanInput.value = sourcePlans["默认"] || 0;
+  const years = monthlyPlanYears(sourcePlans);
+  if (!years.includes(state.monthlyPlanYear)) state.monthlyPlanYear = years[0] || currentYear;
   const overrides = Object.entries(sourcePlans)
-    .filter(([month]) => month !== "默认")
+    .filter(([month]) => month !== "默认" && month.startsWith(state.monthlyPlanYear))
     .sort(([a], [b]) => a.localeCompare(b));
+  els.monthlyPlanYearOptions.innerHTML = years.map((year) => `
+    <button type="button" class="${year === state.monthlyPlanYear ? "active" : ""}" data-plan-year="${year}">${year}年</button>
+  `).join("");
   els.monthlyPlanSummary.innerHTML = `
     <div class="plan-summary-row">
       <span>新增月份默认金额</span>
       <b>${formatMoney(sourcePlans["默认"] || 0)}</b>
     </div>
     ${overrides.map(([month, amount]) => `
-      <div class="plan-summary-row">
+      <div class="plan-summary-row plan-summary-row-muted">
         <span>${monthLabel(month)}</span>
         <b>${formatMoney(amount)}</b>
       </div>
-    `).join("")}
+    `).join("") || `<div class="plan-summary-row plan-summary-row-muted"><span>${state.monthlyPlanYear}年暂无特殊月份</span><b>默认生效</b></div>`}
   `;
   els.monthlyPlanActions.innerHTML = state.planEditMode === "monthly"
     ? '<button class="plan-action-button subtle" type="button" data-plan-cancel="monthly">取消</button><button class="plan-action-button" type="button" data-plan-save="monthly">保存</button>'
     : '<button class="icon-edit-button" type="button" data-plan-edit="monthly">编辑</button>';
   els.monthlyPlanEditor.classList.toggle("hidden", state.planEditMode !== "monthly");
   els.monthlyPlanList.classList.toggle("hidden", state.planEditMode !== "monthly");
-  const editableMonths = monthOptions().filter((month) => month >= "2026-01" && month <= "2027-12");
+  const editableMonths = monthOptions().filter((month) => month.startsWith(state.monthlyPlanYear));
   els.monthlyPlanList.innerHTML = editableMonths
     .map((month) => `
       <label class="month-plan-row">
@@ -729,6 +768,14 @@ function renderMonthlyPlans() {
       </label>
     `)
     .join("");
+}
+
+function monthlyPlanYears(sourcePlans = state.monthlyPlans) {
+  const years = new Set(monthOptions().map((month) => month.slice(0, 4)));
+  Object.keys(sourcePlans)
+    .filter((key) => key !== "默认")
+    .forEach((month) => years.add(month.slice(0, 4)));
+  return Array.from(years).sort();
 }
 
 function startPlanEdit(mode) {
@@ -799,19 +846,33 @@ function renderView() {
 
 function renderMine() {
   els.accountPhoneLabel.textContent = state.currentAccount ? maskPhone(state.currentAccount) : "未登录";
-  els.accountSinceLabel.textContent = `加入于 2024年3月 · 使用 ${useDays()} 天`;
   els.mineFlowCount.textContent = state.flows.length;
   els.mineSnapshotCount.textContent = state.snapshots.length;
   els.mineUseDays.textContent = useDays();
 }
 
 function showValidation(message) {
+  pendingAlertConfirm = null;
+  els.validationTitle.textContent = "配置比例需为 100%";
   els.validationMessage.textContent = message;
+  els.validationCancel.classList.add("hidden");
+  els.validationClose.textContent = "知道了";
+  els.validationAlert.classList.remove("hidden");
+}
+
+function showConfirmAlert({ title, message, confirmText = "确认", cancelText = "取消", onConfirm }) {
+  pendingAlertConfirm = onConfirm;
+  els.validationTitle.textContent = title;
+  els.validationMessage.textContent = message;
+  els.validationCancel.textContent = cancelText;
+  els.validationClose.textContent = confirmText;
+  els.validationCancel.classList.remove("hidden");
   els.validationAlert.classList.remove("hidden");
 }
 
 function closeValidation() {
   els.validationAlert.classList.add("hidden");
+  pendingAlertConfirm = null;
 }
 
 function openFlowModal(index = "") {
@@ -847,12 +908,20 @@ function resetFlowForm() {
   els.flowForm.reset();
   els.flowForm.dataset.editIndex = "";
   document.querySelector("#flowDate").value = `${state.selectedMonth}-01`;
+  const classes = [...new Set(targets.map((item) => item.cls))];
+  setAppSelectOptions(els.flowPlatform, platforms);
+  setAppSelectOptions(els.flowAction, ["投入", "取出"], "投入");
+  setAppSelectOptions(els.flowClass, classes);
+  renderAssetOptions(els.flowAsset, els.flowClass.value || classes[0]);
 }
 
 function resetSnapshotForm() {
   els.snapshotForm.reset();
   els.snapshotForm.dataset.editIndex = "";
   document.querySelector("#snapshotMonth").value = state.selectedMonth;
+  const classes = [...new Set(targets.map((item) => item.cls))];
+  setAppSelectOptions(els.snapshotClass, classes);
+  renderAssetOptions(els.snapshotAsset, els.snapshotClass.value || classes[0]);
 }
 
 function fillFlowForm(index) {
@@ -863,12 +932,11 @@ function fillFlowForm(index) {
   }
   const flow = state.flows[Number(index)];
   document.querySelector("#flowDate").value = flow.date;
-  els.flowPlatform.value = flow.platform;
-  els.flowClass.value = flow.cls;
+  setAppSelectOptions(els.flowPlatform, platforms, flow.platform);
+  setAppSelectOptions(els.flowAction, ["投入", "取出"], flow.action);
+  setAppSelectOptions(els.flowClass, [...new Set(targets.map((item) => item.cls))], flow.cls);
   renderAssetOptions(els.flowAsset, flow.cls, flow.type);
-  els.flowAsset.value = flow.type;
   document.querySelector("#flowTarget").value = flow.target;
-  document.querySelector("#flowAction").value = flow.action;
   document.querySelector("#flowAmount").value = flow.amount;
   document.querySelector("#flowNote").value = flow.note;
 }
@@ -881,9 +949,8 @@ function fillSnapshotForm(index) {
   }
   const snapshot = state.snapshots[Number(index)];
   document.querySelector("#snapshotMonth").value = snapshot.month;
-  els.snapshotClass.value = snapshot.cls;
+  setAppSelectOptions(els.snapshotClass, [...new Set(targets.map((item) => item.cls))], snapshot.cls);
   renderAssetOptions(els.snapshotAsset, snapshot.cls, snapshot.type);
-  els.snapshotAsset.value = snapshot.type;
   document.querySelector("#snapshotStart").value = snapshot.start;
   document.querySelector("#snapshotEnd").value = snapshot.end;
   document.querySelector("#snapshotNote").value = snapshot.note;
@@ -987,6 +1054,13 @@ els.monthlyPlanActions.addEventListener("click", (event) => {
   if (save) saveMonthlyPlans();
 });
 
+els.monthlyPlanYearOptions.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-plan-year]");
+  if (!button) return;
+  state.monthlyPlanYear = button.dataset.planYear;
+  renderAll();
+});
+
 els.targetPlanActions.addEventListener("click", (event) => {
   const edit = event.target.closest("[data-plan-edit]");
   const cancel = event.target.closest("[data-plan-cancel]");
@@ -1008,6 +1082,29 @@ els.targetList.addEventListener("click", (event) => {
     state.draftTargets.splice(Number(remove.dataset.deleteTarget), 1);
     renderAll();
   }
+});
+
+document.addEventListener("click", (event) => {
+  const trigger = event.target.closest(".app-select-trigger");
+  const option = event.target.closest("[data-select-option]");
+  if (trigger) {
+    const select = trigger.closest(".app-select");
+    const opening = !select.classList.contains("open");
+    closeAppSelects(select);
+    select.classList.toggle("open", opening);
+    trigger.setAttribute("aria-expanded", String(opening));
+    return;
+  }
+  if (option) {
+    const select = option.closest(".app-select");
+    const input = select.querySelector("input");
+    input.value = option.dataset.selectOption;
+    setAppSelectOptions(input, Array.from(select.querySelectorAll("[data-select-option]")).map((button) => button.dataset.selectOption), input.value);
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+    closeAppSelects();
+    return;
+  }
+  if (!event.target.closest(".app-select")) closeAppSelects();
 });
 
 els.flowClass.addEventListener("change", () => {
@@ -1067,7 +1164,7 @@ els.flowForm.addEventListener("submit", (event) => {
     cls: els.flowClass.value,
     type: els.flowAsset.value,
     target: document.querySelector("#flowTarget").value.trim(),
-    action: document.querySelector("#flowAction").value,
+    action: els.flowAction.value,
     amount,
     note: document.querySelector("#flowNote").value.trim(),
   };
@@ -1180,10 +1277,21 @@ els.heroPrivacyButton.addEventListener("click", () => {
 });
 
 els.logoutButton.addEventListener("click", () => {
-  if (window.confirm("确认退出当前账号？")) logout();
+  showConfirmAlert({
+    title: "退出当前账号？",
+    message: "退出后仍可用手机号重新登录，本机已保存的数据不会被删除。",
+    confirmText: "退出登录",
+    onConfirm: logout,
+  });
 });
 
-els.validationClose.addEventListener("click", closeValidation);
+els.validationClose.addEventListener("click", () => {
+  const confirm = pendingAlertConfirm;
+  closeValidation();
+  if (confirm) confirm();
+});
+
+els.validationCancel.addEventListener("click", closeValidation);
 
 els.validationAlert.addEventListener("click", (event) => {
   if (event.target === els.validationAlert) closeValidation();

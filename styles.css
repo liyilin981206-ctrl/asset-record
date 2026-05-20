@@ -697,6 +697,87 @@ select:focus {
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.16);
 }
 
+.app-select {
+  position: relative;
+  width: 100%;
+}
+
+.app-select-trigger {
+  position: relative;
+  width: 100%;
+  height: 46px;
+  padding: 0 38px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(249, 247, 255, 0.92));
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.58);
+}
+
+.app-select-trigger::after {
+  content: "";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--green-deep);
+  border-bottom: 2px solid var(--green-deep);
+  transform: translateY(-65%) rotate(45deg);
+  transition: transform 0.18s ease;
+}
+
+.app-select.open .app-select-trigger {
+  border-color: rgba(107, 95, 230, 0.62);
+  box-shadow: 0 0 0 3px rgba(107, 95, 230, 0.13);
+}
+
+.app-select.open .app-select-trigger::after {
+  transform: translateY(-30%) rotate(225deg);
+}
+
+.app-select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 7px);
+  z-index: 8;
+  display: none;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 7px;
+  border: 1px solid rgba(221, 214, 251, 0.92);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 42px rgba(73, 62, 148, 0.18);
+  backdrop-filter: blur(16px);
+}
+
+.app-select.open .app-select-menu {
+  display: grid;
+  gap: 5px;
+}
+
+.app-select-menu button {
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.app-select-menu button.active {
+  background: linear-gradient(135deg, rgba(107, 95, 230, 0.14), rgba(139, 109, 255, 0.12));
+  color: var(--green-deep);
+}
+
 .field-row {
   gap: 10px;
 }
@@ -1392,6 +1473,27 @@ select:focus {
   font-weight: 950;
 }
 
+.plan-summary-row-muted {
+  padding: 11px 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.58), rgba(245, 242, 255, 0.62));
+  opacity: 0.74;
+}
+
+.plan-summary-row-muted span {
+  font-size: 12px;
+}
+
+.plan-summary-row-muted b {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.plan-year-strip {
+  margin: 12px 0 0;
+  padding-bottom: 0;
+}
+
 .target-class-summary {
   display: grid;
   gap: 10px;
@@ -1791,15 +1893,31 @@ select:focus {
   line-height: 1.5;
 }
 
-.center-alert-card button {
+.center-alert-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.center-alert-actions .alert-button:only-child,
+.center-alert-actions .alert-button.hidden + .alert-button {
+  grid-column: 1 / -1;
+}
+
+.alert-button {
   width: 100%;
   height: 42px;
-  margin-top: 16px;
   border-radius: 15px;
   background: linear-gradient(135deg, #6b5fe6, #8b6dff);
   color: #ffffff;
   font-size: 13px;
   font-weight: 900;
+}
+
+.alert-button.subtle {
+  background: rgba(238, 234, 255, 0.86);
+  color: var(--muted);
 }
 
 .modal-layer {
