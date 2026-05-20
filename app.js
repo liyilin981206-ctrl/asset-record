@@ -85,7 +85,6 @@ const els = {
   accountPhoneLabel: document.querySelector("#accountPhoneLabel"),
   mineFlowCount: document.querySelector("#mineFlowCount"),
   mineSnapshotCount: document.querySelector("#mineSnapshotCount"),
-  mineUseDays: document.querySelector("#mineUseDays"),
   logoutButton: document.querySelector("#logoutButton"),
   pageTitle: document.querySelector("#pageTitle"),
   nav: document.querySelector(".bottom-nav"),
@@ -152,7 +151,6 @@ const els = {
   cancelHistoryTarget: document.querySelector("#cancelHistoryTarget"),
   confirmHistoryTarget: document.querySelector("#confirmHistoryTarget"),
   historyMonthOptions: document.querySelector("#historyMonthOptions"),
-  historyMonthLabel: document.querySelector("#historyMonthLabel"),
   historyTargetList: document.querySelector("#historyTargetList"),
 };
 
@@ -747,13 +745,10 @@ function renderTargets() {
     els.targetPlanTitle.textContent = "目标配置";
     els.targetPlanDescription.textContent = `当前生效版本：${monthLabel(state.targetEffectiveMonth)}起`;
     els.targetPlanActions.innerHTML = '<button class="icon-edit-button" type="button" data-plan-edit="targets">编辑</button>';
-    els.targetVersionNotice.innerHTML = `
-      <div class="target-version-note">历史月份默认冻结，后续月份按最新目标版本计算</div>
-    `;
+    els.targetVersionNotice.innerHTML = "";
     els.targetList.innerHTML = targetClassCards(sourceTargets);
     els.targetHistoryHelper.innerHTML = `
       <div>
-        <span>历史月份默认冻结；如果某个月目标录入有误，可单独修正。</span>
         <button type="button" data-open-history-target>修正历史目标</button>
       </div>
     `;
@@ -784,8 +779,7 @@ function renderHistoryTargetModal() {
   els.historyMonthOptions.innerHTML = months.map((month) => `
     <button type="button" class="${month === state.historyTargetMonth ? "active" : ""}" data-history-month="${month}">${month.slice(0, 4)}-${month.slice(5)}</button>
   `).join("");
-  els.historyMonthLabel.textContent = `修正月份：${monthLabel(state.historyTargetMonth)}`;
-  els.historyTargetList.innerHTML = targetClassCards(targets);
+  els.historyTargetList.innerHTML = targetClassCards(targets, { editable: true });
 }
 
 function renderMonthlyPlans() {
@@ -899,7 +893,6 @@ function renderMine() {
   els.accountPhoneLabel.textContent = state.currentAccount ? maskPhone(state.currentAccount) : "未登录";
   els.mineFlowCount.textContent = state.flows.length;
   els.mineSnapshotCount.textContent = state.snapshots.length;
-  els.mineUseDays.textContent = useDays();
 }
 
 function showValidation(message) {
