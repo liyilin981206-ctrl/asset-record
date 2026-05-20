@@ -1117,6 +1117,7 @@ els.targetPlanActions.addEventListener("click", (event) => {
 function openHistoryTargetModal() {
   renderHistoryTargetModal();
   els.historyTargetModal.classList.remove("hidden");
+  els.historyTargetList.scrollTop = 0;
 }
 
 function closeHistoryTargetModal() {
