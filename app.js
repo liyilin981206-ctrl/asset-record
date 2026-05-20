@@ -50,6 +50,9 @@ const state = {
   recordMonth: "all",
   recordPage: 1,
   monthlyPlanYear: currentYear,
+  targetEffectiveMonth: "2026-05",
+  targetEditEffectiveMonth: "2026-06",
+  historyTargetMonth: "2026-03",
   amountVisible: true,
   planEditMode: "",
   draftMonthlyPlans: null,
@@ -139,7 +142,18 @@ const els = {
   monthlyPlanYearOptions: document.querySelector("#monthlyPlanYearOptions"),
   monthlyPlanList: document.querySelector("#monthlyPlanList"),
   targetPlanActions: document.querySelector("#targetPlanActions"),
+  targetPlanTitle: document.querySelector("#targetPlanTitle"),
+  targetPlanDescription: document.querySelector("#targetPlanDescription"),
+  targetVersionNotice: document.querySelector("#targetVersionNotice"),
+  targetHistoryHelper: document.querySelector("#targetHistoryHelper"),
   targetList: document.querySelector("#targetList"),
+  historyTargetModal: document.querySelector("#historyTargetModal"),
+  closeHistoryTarget: document.querySelector("#closeHistoryTarget"),
+  cancelHistoryTarget: document.querySelector("#cancelHistoryTarget"),
+  confirmHistoryTarget: document.querySelector("#confirmHistoryTarget"),
+  historyMonthOptions: document.querySelector("#historyMonthOptions"),
+  historyMonthLabel: document.querySelector("#historyMonthLabel"),
+  historyTargetList: document.querySelector("#historyTargetList"),
 };
 
 let pendingAlertConfirm = null;
@@ -573,6 +587,78 @@ function renderRecordType() {
   els.snapshotModalTitle.textContent = snapshotEditing ? "编辑快照" : "新增快照";
 }
 
+function targetClassCards(sourceTargets, { editable = false } = {}) {
+  const classOptions = ["防御", "稳健", "进攻"];
+  const classMeta = {
+    "防御": { tone: "defense" },
+    "稳健": { tone: "steady" },
+    "进攻": { tone: "growth" },
+  };
+  const byClass = sourceTargets.reduce((store, item) => {
+    store[item.cls] = (store[item.cls] || 0) + item.target;
+    return store;
+  }, {});
+  if (!editable) {
+    return classOptions
+      .map((cls) => {
+        const meta = classMeta[cls] || classMeta["稳健"];
+        return `
+        <article class="target-class-summary is-${meta.tone}">
+          <div class="target-class-head">
+            <div class="class-label">
+              <div>
+                <strong>${cls}</strong>
+              </div>
+            </div>
+            <b>${Math.round((byClass[cls] || 0) * 100)}<small>%</small></b>
+          </div>
+          <div class="target-type-list">
+            ${sourceTargets.filter((item) => item.cls === cls).map((item, index) => `
+              <div class="target-type-row">
+                <span><i style="--dot-index:${index}"></i>${item.type}</span>
+                <b>${Math.round(item.target * 100)}%</b>
+              </div>
+            `).join("") || '<div class="target-type-row"><span>暂无小类</span><b>0%</b></div>'}
+          </div>
+        </article>
+      `;
+      })
+      .join("");
+  }
+  return classOptions
+    .map((cls) => {
+      const rows = sourceTargets.map((item, index) => ({ ...item, index })).filter((item) => item.cls === cls);
+      const total = rows.reduce((sum, item) => sum + item.target, 0);
+      const meta = classMeta[cls] || classMeta["稳健"];
+      return `
+        <article class="target-edit-group is-${meta.tone}">
+          <div class="target-edit-head">
+            <div class="class-label">
+              <div>
+                <strong>${cls}</strong>
+                <span>合计 ${Math.round(total * 100)}%</span>
+              </div>
+            </div>
+            <button type="button" data-add-target="${cls}">新增小类</button>
+          </div>
+          <div class="target-edit-list">
+            ${rows.map((item) => `
+              <div class="target-edit-row">
+                <input value="${item.type}" data-target-type="${item.index}" aria-label="${cls} 小类名称" autocomplete="off" />
+                <label class="target-ratio-field">
+                  <input value="${(item.target * 100).toFixed(0)}" inputmode="decimal" data-target-index="${item.index}" aria-label="${item.type} 目标比例" />
+                  <span>%</span>
+                </label>
+                <button type="button" data-delete-target="${item.index}" aria-label="删除${item.type}">删除</button>
+              </div>
+            `).join("") || '<p class="muted target-empty">暂无小类，点击新增小类添加。</p>'}
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function renderRecords() {
   document.querySelectorAll("[data-record-view]").forEach((button) => button.classList.toggle("active", button.dataset.recordView === state.recordView));
   const allRecords = state.recordView === "flow"
@@ -657,78 +743,49 @@ function renderSnapshotRecord(snapshot) {
 
 function renderTargets() {
   const sourceTargets = state.planEditMode === "targets" && state.draftTargets ? state.draftTargets : targets;
-  const classOptions = ["防御", "稳健", "进攻"];
-  const classMeta = {
-    "防御": { icon: "盾", tone: "defense" },
-    "稳健": { icon: "衡", tone: "steady" },
-    "进攻": { icon: "升", tone: "growth" },
-  };
-  const byClass = sourceTargets.reduce((store, item) => {
-    store[item.cls] = (store[item.cls] || 0) + item.target;
-    return store;
-  }, {});
   if (state.planEditMode !== "targets") {
+    els.targetPlanTitle.textContent = "目标配置";
+    els.targetPlanDescription.textContent = `当前生效版本：${monthLabel(state.targetEffectiveMonth)}起`;
     els.targetPlanActions.innerHTML = '<button class="icon-edit-button" type="button" data-plan-edit="targets">编辑</button>';
-    els.targetList.innerHTML = classOptions
-      .map((cls) => {
-        const meta = classMeta[cls] || classMeta["稳健"];
-        return `
-        <article class="target-class-summary is-${meta.tone}">
-          <div class="target-class-head">
-            <div class="class-label">
-              <div>
-                <strong>${cls}</strong>
-              </div>
-            </div>
-            <b>${Math.round((byClass[cls] || 0) * 100)}<small>%</small></b>
-          </div>
-          <div class="target-type-list">
-            ${sourceTargets.filter((item) => item.cls === cls).map((item, index) => `
-              <div class="target-type-row">
-                <span><i style="--dot-index:${index}"></i>${item.type}</span>
-                <b>${Math.round(item.target * 100)}%</b>
-              </div>
-            `).join("") || '<div class="target-type-row"><span>暂无小类</span><b>0%</b></div>'}
-          </div>
-        </article>
-      `;
-      })
-      .join("");
+    els.targetVersionNotice.innerHTML = `
+      <div class="target-version-note">历史月份默认冻结，后续月份按最新目标版本计算</div>
+    `;
+    els.targetList.innerHTML = targetClassCards(sourceTargets);
+    els.targetHistoryHelper.innerHTML = `
+      <div>
+        <span>历史月份默认冻结；如果某个月目标录入有误，可单独修正。</span>
+        <button type="button" data-open-history-target>修正历史目标</button>
+      </div>
+    `;
+    renderHistoryTargetModal();
     return;
   }
+  els.targetPlanTitle.textContent = "编辑目标配置";
+  els.targetPlanDescription.textContent = "修改后将作为新的生效版本应用到后续月份";
   els.targetPlanActions.innerHTML = '<button class="plan-action-button subtle" type="button" data-plan-cancel="targets">取消</button><button class="plan-action-button" type="button" data-plan-save="targets">保存</button>';
-  els.targetList.innerHTML = classOptions
-    .map((cls) => {
-      const rows = sourceTargets.map((item, index) => ({ ...item, index })).filter((item) => item.cls === cls);
-      const total = rows.reduce((sum, item) => sum + item.target, 0);
-      const meta = classMeta[cls] || classMeta["稳健"];
-      return `
-        <article class="target-edit-group is-${meta.tone}">
-          <div class="target-edit-head">
-            <div class="class-label">
-              <div>
-                <strong>${cls}</strong>
-                <span>合计 ${Math.round(total * 100)}%</span>
-              </div>
-            </div>
-            <button type="button" data-add-target="${cls}">新增小类</button>
-          </div>
-          <div class="target-edit-list">
-            ${rows.map((item) => `
-              <div class="target-edit-row">
-                <input value="${item.type}" data-target-type="${item.index}" aria-label="${cls} 小类名称" autocomplete="off" />
-                <label class="target-ratio-field">
-                  <input value="${(item.target * 100).toFixed(0)}" inputmode="decimal" data-target-index="${item.index}" aria-label="${item.type} 目标比例" />
-                  <span>%</span>
-                </label>
-                <button type="button" data-delete-target="${item.index}" aria-label="删除${item.type}">删除</button>
-              </div>
-            `).join("") || '<p class="muted target-empty">暂无小类，点击新增小类添加。</p>'}
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+  els.targetVersionNotice.innerHTML = `
+    <div class="target-edit-note">
+      <b>生效月份：${monthLabel(state.targetEditEffectiveMonth)}</b>
+      <span>影响范围：${monthLabel(state.targetEditEffectiveMonth)}及以后</span>
+      <em>保存后仅影响后续月份，历史月份保持不变。</em>
+    </div>
+  `;
+  els.targetHistoryHelper.innerHTML = "";
+  els.targetList.innerHTML = targetClassCards(sourceTargets, { editable: true });
+}
+
+function historyMonths() {
+  return monthOptions().filter((month) => month <= state.targetEffectiveMonth).slice(-5);
+}
+
+function renderHistoryTargetModal() {
+  const months = historyMonths();
+  if (!months.includes(state.historyTargetMonth)) state.historyTargetMonth = months.at(-1) || "2026-01";
+  els.historyMonthOptions.innerHTML = months.map((month) => `
+    <button type="button" class="${month === state.historyTargetMonth ? "active" : ""}" data-history-month="${month}">${month.slice(0, 4)}-${month.slice(5)}</button>
+  `).join("");
+  els.historyMonthLabel.textContent = `修正月份：${monthLabel(state.historyTargetMonth)}`;
+  els.historyTargetList.innerHTML = targetClassCards(targets);
 }
 
 function renderMonthlyPlans() {
@@ -1064,6 +1121,33 @@ els.targetPlanActions.addEventListener("click", (event) => {
   if (save) saveTargetPlans();
 });
 
+function openHistoryTargetModal() {
+  renderHistoryTargetModal();
+  els.historyTargetModal.classList.remove("hidden");
+}
+
+function closeHistoryTargetModal() {
+  els.historyTargetModal.classList.add("hidden");
+}
+
+els.targetHistoryHelper.addEventListener("click", (event) => {
+  if (event.target.closest("[data-open-history-target]")) openHistoryTargetModal();
+});
+
+els.historyMonthOptions.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-history-month]");
+  if (!button) return;
+  state.historyTargetMonth = button.dataset.historyMonth;
+  renderHistoryTargetModal();
+});
+
+els.closeHistoryTarget.addEventListener("click", closeHistoryTargetModal);
+els.cancelHistoryTarget.addEventListener("click", closeHistoryTargetModal);
+els.confirmHistoryTarget.addEventListener("click", closeHistoryTargetModal);
+els.historyTargetModal.addEventListener("click", (event) => {
+  if (event.target === els.historyTargetModal) closeHistoryTargetModal();
+});
+
 els.targetList.addEventListener("click", (event) => {
   const add = event.target.closest("[data-add-target]");
   const remove = event.target.closest("[data-delete-target]");
@@ -1090,12 +1174,18 @@ document.addEventListener("click", (event) => {
     return;
   }
   if (option) {
+    event.preventDefault();
+    event.stopPropagation();
     const select = option.closest(".app-select");
     const input = select.querySelector("input");
     const options = Array.from(select.querySelectorAll("[data-select-option]")).map((button) => button.dataset.selectOption);
     input.value = option.dataset.selectOption;
+    select.classList.remove("open");
+    select.querySelector(".app-select-trigger").setAttribute("aria-expanded", "false");
     closeAppSelects();
     setAppSelectOptions(input, options, input.value);
+    input.closest(".app-select").classList.remove("open");
+    input.closest(".app-select").querySelector(".app-select-trigger").setAttribute("aria-expanded", "false");
     input.dispatchEvent(new Event("change", { bubbles: true }));
     return;
   }
