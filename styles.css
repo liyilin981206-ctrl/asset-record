@@ -1300,10 +1300,10 @@ select:focus {
 
 .target-history-helper > div {
   display: grid;
+  justify-items: center;
 }
 
 .target-history-helper button {
-  justify-self: start;
   height: 32px;
   padding: 0 12px;
   border-radius: 12px;

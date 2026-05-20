@@ -1,9 +1,9 @@
-const CACHE_NAME = "asset-record-v17";
+const CACHE_NAME = "asset-record-v18";
 const APP_ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=compact-edit-v1",
-  "./app.js?v=compact-edit-v1",
+  "./styles.css?v=history-button-center-v1",
+  "./app.js?v=history-button-center-v1",
   "./manifest.webmanifest",
   "./icon.svg",
 ];
