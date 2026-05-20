@@ -112,6 +112,9 @@ const els = {
   snapshotModal: document.querySelector("#snapshotModal"),
   flowModalTitle: document.querySelector("#flowModalTitle"),
   snapshotModalTitle: document.querySelector("#snapshotModalTitle"),
+  validationAlert: document.querySelector("#validationAlert"),
+  validationMessage: document.querySelector("#validationMessage"),
+  validationClose: document.querySelector("#validationClose"),
   openFlowButton: document.querySelector("#openFlowButton"),
   openSnapshotButton: document.querySelector("#openSnapshotButton"),
   flowForm: document.querySelector("#flowForm"),
@@ -584,7 +587,6 @@ function renderFlowRecord(flow) {
   const isNegative = negativeOps.includes(flow.action);
   return `
     <article class="activity-item">
-      <div class="act-icon" aria-hidden="true">${assetIcon(flow.cls, flow.type)}</div>
       <div class="activity-main act-body">
         <div class="activity-name act-name">${flow.platform} · ${flow.type}</div>
         <div class="activity-meta act-meta">${flow.date} / ${flow.action} / ${flow.note || "无备注"}</div>
@@ -604,7 +606,6 @@ function renderSnapshotRecord(snapshot) {
   const profit = snapshot.end - snapshot.start;
   return `
     <article class="activity-item">
-      <div class="act-icon" aria-hidden="true">${assetIcon(snapshot.cls, snapshot.type)}</div>
       <div class="activity-main act-body">
         <div class="activity-name act-name">${snapshot.cls} · ${snapshot.type}</div>
         <div class="activity-meta act-meta">${snapshot.month} 快照 / 期初 ${formatMoney(snapshot.start)} / 期末 ${formatMoney(snapshot.end)}</div>
@@ -773,7 +774,7 @@ function saveTargetPlans() {
   if (state.planEditMode !== "targets" || !state.draftTargets) return;
   const total = state.draftTargets.reduce((sum, item) => sum + item.target, 0);
   if (Math.round(total * 100) !== 100) {
-    window.alert(`当前目标配置合计为 ${Math.round(total * 100)}%，请调整到 100% 后再保存。`);
+    showValidation(`当前目标配置合计为 ${Math.round(total * 100)}%，请调整到 100% 后再保存。`);
     return;
   }
   targets.splice(0, targets.length, ...state.draftTargets.map((item) => ({ ...item })));
@@ -789,7 +790,7 @@ function renderView() {
   document.body.dataset.view = state.view;
   const titles = {
     overview: "投入与收益总览",
-    record: "记录资产流水",
+    record: "资产流水",
     plan: "资产配置计划",
     mine: "我的",
   };
@@ -802,6 +803,15 @@ function renderMine() {
   els.mineFlowCount.textContent = state.flows.length;
   els.mineSnapshotCount.textContent = state.snapshots.length;
   els.mineUseDays.textContent = useDays();
+}
+
+function showValidation(message) {
+  els.validationMessage.textContent = message;
+  els.validationAlert.classList.remove("hidden");
+}
+
+function closeValidation() {
+  els.validationAlert.classList.add("hidden");
 }
 
 function openFlowModal(index = "") {
@@ -1171,6 +1181,12 @@ els.heroPrivacyButton.addEventListener("click", () => {
 
 els.logoutButton.addEventListener("click", () => {
   if (window.confirm("确认退出当前账号？")) logout();
+});
+
+els.validationClose.addEventListener("click", closeValidation);
+
+els.validationAlert.addEventListener("click", (event) => {
+  if (event.target === els.validationAlert) closeValidation();
 });
 
 const savedAccount = localStorage.getItem(sessionKey);
