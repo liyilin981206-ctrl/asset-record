@@ -596,9 +596,9 @@ h2 {
 
 .period-filter {
   display: grid;
-  gap: 6px;
+  gap: 10px;
   margin: 0 -12px 8px;
-  padding: 0 12px 8px;
+  padding: 12px 12px 8px;
   background: transparent;
   border-radius: 0;
 }
@@ -633,13 +633,14 @@ h2 {
   color: #5b5360;
   font-size: 12px;
   font-weight: 900;
-  box-shadow: 0 6px 16px rgba(74, 57, 146, 0.08);
+  box-shadow: none;
 }
 
 .chip-strip button.active {
   border-color: transparent;
   background: linear-gradient(135deg, #6f55f6 0%, #8b6dff 100%);
   color: #fff;
+  box-shadow: none;
 }
 
 .period-row {
