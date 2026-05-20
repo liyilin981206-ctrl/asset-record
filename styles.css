@@ -1322,7 +1322,8 @@ select:focus {
 }
 
 .history-month-strip {
-  margin: 0 0 12px;
+  margin: 0 0 24px;
+  padding-bottom: 8px;
 }
 
 .mine-hero {
@@ -1835,7 +1836,14 @@ select:focus {
 }
 
 .plan-input-row {
-  margin-bottom: 12px;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.plan-input-row input {
+  height: 38px;
+  border-radius: 14px;
+  font-size: 14px;
 }
 
 .section-subtitle {
@@ -1845,22 +1853,28 @@ select:focus {
 
 .monthly-plan-list {
   display: grid;
-  gap: 10px;
+  gap: 8px;
   max-height: 330px;
   overflow: auto;
   padding-right: 2px;
 }
 
 .month-plan-row {
-  grid-template-columns: 96px 1fr;
+  grid-template-columns: 86px 1fr;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .month-plan-row span {
   color: var(--ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
+}
+
+.month-plan-row input {
+  height: 38px;
+  border-radius: 14px;
+  font-size: 14px;
 }
 
 .ratio-input {
@@ -2035,7 +2049,8 @@ select:focus {
 
 .modal-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 150px) minmax(0, 190px);
+  justify-content: center;
   gap: 10px;
   position: sticky;
   bottom: 0;
@@ -2045,6 +2060,13 @@ select:focus {
   border-top: 1px solid rgba(221, 214, 251, 0.72);
   background: rgba(255, 255, 255, 0.94);
   backdrop-filter: blur(14px);
+}
+
+.modal-actions .primary-button,
+.modal-actions .secondary-button {
+  height: 40px;
+  border-radius: 15px;
+  font-size: 13px;
 }
 
 .modal-scroll-list {
